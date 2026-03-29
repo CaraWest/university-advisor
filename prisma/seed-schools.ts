@@ -1,11 +1,15 @@
 /**
- * Machine-generated from IR_LawPrep_Schools_v2.md — do not hand-edit rows.
+ * Generated from docs/context/IR_LawPrep_Schools_v2.md on 2026-03-29.
+ * Hand-sync when the markdown list changes; a regeneration script is planned for V2.
  *
- * Dedup: first table row wins for institutionType. Schools listed again under
- * Women's Colleges or PPE-only tables keep their primary section type unless
- * they appear only in PPE (then LAC-IRFocus).
+ * Count: 144 distinct institutions (deduplicated from the markdown tables).
  *
- * All seeds use city: null — fill via Cowork/research import or manually later.
+ * Dedup rule: first table appearance wins for institutionType. Later mentions
+ * (Women’s Colleges, PPE spotlight, etc.) do not override the primary section.
+ *
+ * Cities: mostly null here — partial city data can be added manually or via research import.
+ *
+ * Do not hand-edit row data except when reconciling with the markdown source.
  */
 
 export type SeedSchool = {
@@ -59,6 +63,7 @@ export const SEED_SCHOOLS: SeedSchool[] = [
   { name: "Gonzaga University", state: "WA", city: null, institutionType: "Research-IRFocus" },
   { name: "Grinnell College", state: "IA", city: null, institutionType: "LAC-HighlySelective" },
   { name: "Hamilton College", state: "NY", city: null, institutionType: "LAC-HighlySelective" },
+  // REVIEW: LAC-IRFocus is a placeholder — men’s college; confirm best institutionType bucket during build.
   { name: "Hampden-Sydney College", state: "VA", city: null, institutionType: "LAC-IRFocus" },
   { name: "Harvard University", state: "MA", city: null, institutionType: "Research-HighSelectivity" },
   { name: "Haverford College", state: "PA", city: null, institutionType: "LAC-HighlySelective" },
@@ -70,6 +75,7 @@ export const SEED_SCHOOLS: SeedSchool[] = [
   { name: "Johns Hopkins University", state: "MD", city: null, institutionType: "Research-HighSelectivity" },
   { name: "Kalamazoo College", state: "MI", city: null, institutionType: "LAC-IRFocus" },
   { name: "Kenyon College", state: "OH", city: null, institutionType: "LAC-IRFocus" },
+  // REVIEW: LAC-IRFocus is a placeholder — smaller PPE/IR-adjacent school; confirm bucket during build.
   { name: "King's College (PA)", state: "PA", city: null, institutionType: "LAC-IRFocus" },
   { name: "Lafayette College", state: "PA", city: null, institutionType: "LAC-HighlySelective" },
   { name: "Lawrence University", state: "WI", city: null, institutionType: "LAC-IRFocus" },

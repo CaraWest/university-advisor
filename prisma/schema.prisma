@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model School {
+  id               String    @id @default(cuid())
+  name             String
+  state            String
+  city             String?
+  institutionType  String
+  latitude         Float?
+  longitude        Float?
+  distanceFromHome Float?
+
+  lifecycleStatus String  @default("Research")
+  rejectionReason String?
+
+  abigailFavorite  Boolean @default(false)
+  coachContactedUs Boolean @default(false)
+  weContactedCoach Boolean @default(false)
+  campusVisit      Boolean @default(false)
+  applyEarly       Boolean @default(false)
+
+  notes String?
+
+  aiSummary          String?
+  summaryGeneratedAt DateTime?
+
+  appDeadlineEA DateTime?
+  appDeadlineED DateTime?
+  appDeadlineRD DateTime?
+
+  swimData        SwimData?
+  academicProfile AcademicProfile?
+  financialModel  FinancialModel?
+  coachContacts   CoachContact[]
+  researchBlob    ResearchBlob?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+  @@index([state])
+}
+
+model SwimData {
+  id                String   @id @default(cuid())
+  schoolId          String   @unique
+  school            School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  ncaaDivision      String?
+  hasSwimTeam       Boolean  @default(true)
+  athleticTier      String?
+  teamPowerIndexAvg Float?
+  powerIndex8th     Float?
+  abigailRank       Int?
+  rosterSize        Int?
+  seniorsGraduating Int?
+  swimcloudUrl      String?
+  dataCollectedAt   DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model AcademicProfile {
+  id                  String   @id @default(cuid())
+  schoolId            String   @unique
+  school              School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  programLabel        String?
+  programType         String?
+  flagshipSchool      String?
+  programNotes        String?
+  studyAbroadLevel    String?
+  studyAbroadNotes    String?
+  majorFlexibility    String?
+  acceptanceRate      Float?
+  satMid50Low         Int?
+  satMid50High        Int?
+  enrollmentSize      Int?
+  setting             String?
+  retentionRate       Float?
+  gradRate4Year       Float?
+  studentFacultyRatio Float?
+  lawSchoolAcceptRate Float?
+  t14Placements       String?
+  preLawQuality       String?
+  feederReputation    String?
+  dataCollectedAt     DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model FinancialModel {
+  id                   String   @id @default(cuid())
+  schoolId             String   @unique
+  school               School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  publishedCOA         Int?
+  tuition              Int?
+  roomAndBoard         Int?
+  feesAndOther         Int?
+  meritAidAvailable    Boolean?
+  meritAidThreshold    String?
+  estimatedMeritAid    Int?
+  athleticAidAvailable Boolean?
+  estimatedAthleticAid Int?
+  needAidLikely        Boolean?
+  estimatedNetCost     Int?
+  fourYearEstimate     Int?
+  financialNotes       String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model CoachContact {
+  id           String   @id @default(cuid())
+  schoolId     String
+  school       School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  date         DateTime
+  direction    String
+  type         String
+  summary      String
+  rawContent   String? // JSON text; Prisma 5 + SQLite has no Json type (upgrade to Prisma 6.2+ to use Json)
+  draftedReply Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model ResearchBlob {
+  id              String   @id @default(cuid())
+  schoolId        String   @unique
+  school          School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  programDepth    String?
+  studyAbroad     String?
+  lawSchoolDetail String?
+  swimDetail      String?
+  notableFacts    String?
+  rawJson         String? // JSON text; Prisma 5 + SQLite has no Json type
+  collectedAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model AppSettings {
+  id              String   @id @default(cuid())
+  summaryPrompt   String?
+  promptUpdatedAt DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
