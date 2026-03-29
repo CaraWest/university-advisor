@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.*
+!.env.example
+dist/
+build/
+.next/
+.turbo/
+*.log
+.DS_Store
+
+# Prisma (local SQLite during dev)
+*.db
+*.db-journal
