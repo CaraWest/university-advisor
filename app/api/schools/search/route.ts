@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requireAuthSession } from "@/lib/require-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,9 @@ export type ScorecardSearchResult = {
 };
 
 export async function GET(request: Request) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const { searchParams } = new URL(request.url);
   const q = searchParams.get("q")?.trim() ?? "";
 

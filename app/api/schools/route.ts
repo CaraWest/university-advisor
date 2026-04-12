@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { requireAuthSession } from "@/lib/require-auth";
 import { distanceMilesFromRoundRock } from "@/lib/derived";
 import { parseSwimcloudTeamIdFromUrl } from "@/lib/swimcloud-team-id";
 import type { SchoolListRow } from "@/lib/types/school-list";
@@ -15,6 +16,9 @@ function ownershipToInstitutionType(ownership: number | undefined): string {
 }
 
 export async function GET() {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const rows = await prisma.school.findMany({
     orderBy: { name: "asc" },
     select: {
@@ -76,6 +80,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const body: unknown = await request.json().catch(() => null);
   if (!body) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });

@@ -1,12 +1,16 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { requireAuthSession } from "@/lib/require-auth";
 import type { SchoolStatusCountsJson } from "@/lib/school-status-counts";
 import { SCHOOL_STATUSES, type SchoolStatus } from "@/lib/validation/school";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const [grouped, allSchools] = await Promise.all([
     prisma.school.groupBy({
       by: ["status"],

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { buildSummaryInstruction, contextJsonForPrompt } from "@/lib/ai/school-summary-context";
 import { completeExecutiveSummary, requireAnthropicApiKey } from "@/lib/ai/call-anthropic";
 import { prisma } from "@/lib/db";
+import { requireAuthSession } from "@/lib/require-auth";
 
 export const maxDuration = 120;
 
@@ -12,6 +13,9 @@ const schoolInclude = {
 } as const;
 
 export async function POST(_request: Request, context: { params: Promise<{ id: string }> | { id: string } }) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const params = await Promise.resolve(context.params);
 
   if (!requireAnthropicApiKey()) {

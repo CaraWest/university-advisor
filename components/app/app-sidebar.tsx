@@ -3,11 +3,13 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
   BadgeCheck,
   CircleDashed,
   GraduationCap,
   ListFilter,
+  LogOut,
   Mail,
   Map,
   Plus,
@@ -22,6 +24,7 @@ import { AddSchoolDialog } from "@/components/app/add-school-dialog";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -223,6 +226,20 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        <SidebarFooter className="border-t border-sidebar-border p-2">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                type="button"
+                tooltip="Sign out"
+                onClick={() => void signOut({ callbackUrl: "/login" })}
+              >
+                <LogOut className="size-4 shrink-0" />
+                <span>Sign out</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
       </SidebarContent>
       <SidebarRail />
       <AddSchoolDialog open={addOpen} onOpenChange={setAddOpen} />

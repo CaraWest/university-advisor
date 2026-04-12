@@ -8,6 +8,7 @@ import {
   deriveFourYearEstimate,
 } from "@/lib/derived";
 import { prisma } from "@/lib/db";
+import { requireAuthSession } from "@/lib/require-auth";
 import { mergeSchoolPatch } from "@/lib/school-patch-merge";
 import { schoolPatchSchema } from "@/lib/validation/school";
 
@@ -48,6 +49,9 @@ async function fetchSchool(id: string): Promise<SchoolDetailPayload | null> {
 }
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> | { id: string } }) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const params = await Promise.resolve(context.params);
   const school = await fetchSchool(params.id);
   if (!school) {
@@ -57,6 +61,9 @@ export async function GET(_request: Request, context: { params: Promise<{ id: st
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> | { id: string } }) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const params = await Promise.resolve(context.params);
   const school = await prisma.school.findUnique({
     where: { id: params.id },

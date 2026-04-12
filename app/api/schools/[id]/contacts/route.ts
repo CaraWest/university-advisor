@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { zodErrorResponse } from "@/lib/api/zod-error-response";
 import { prisma } from "@/lib/db";
+import { requireAuthSession } from "@/lib/require-auth";
 import { coachContactCreateSchema } from "@/lib/validation/coach-contact";
 
 function jsonContact(c: {
@@ -28,6 +29,9 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> | { id: string } },
 ) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const params = await Promise.resolve(context.params);
   const school = await prisma.school.findUnique({
     where: { id: params.id },

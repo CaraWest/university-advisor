@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { requireAuthSession } from "@/lib/require-auth";
 import type { SchoolMapRow } from "@/lib/types/school-map";
 
 export type { SchoolMapRow };
 
 export async function GET() {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const rows = await prisma.school.findMany({
     orderBy: { name: "asc" },
     select: {

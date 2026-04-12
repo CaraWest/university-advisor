@@ -173,9 +173,42 @@ Do not fabricate athletic fit that does not exist. Do not soften "below threshol
 
 Admissions fit: Compare Abigail's SAT composite and section scores against the school's mid-50% range from the structured data. If she is below the 25th percentile, say so plainly and note what it means — she is a reach candidate on academics and will need her application to be exceptional in other dimensions. Do not soften this. If her Power Index makes her a recruit target at this school, note explicitly that athletic recruiting interest may help offset an academic reach. If she is walk-on possible only, note that she cannot count on athletic leverage in admissions.
 
-Cost: If published COA is available in the structured data, state the annual cost. Note whether the school meets full demonstrated need, offers merit aid, or neither. At household incomes above $200k, need-based aid is unlikely at most private institutions — say so. If COA exceeds $70,000/year and no merit aid pathway is evident, flag it as a significant financial consideration that warrants investigation.
+Cost and Financial Aid
 
-Athletic scholarships: If the school is Division III or NAIA, state clearly that athletic scholarships are not available under NCAA rules. Do not omit this even if it seems obvious.
+Lead with realistic cost for a full-pay family, not published COA.
+At household income above $200k, need-based aid is off the table at virtually all private institutions — do not hedge this.
+
+Merit aid thresholds and award amounts change annually. If web search is available, verify current figures from the school's financial aid page before stating them. If current data is not available, say so and note the figure is approximate.
+
+---
+
+If the school offers no merit aid, or the student is unlikely to qualify:
+
+State the published COA and make clear this is what the family will pay. Do not soften it. Use University of Texas at Austin as a concrete comparison point — UT in-state COA runs approximately $30,000–$33,000 per year all-in for a resident student, roughly $120,000–$132,000 over four years. Present the gap between this school and UT as a total four-year dollar figure, not an annual one. The full number is more legible.
+
+After stating the gap, translate it into something concrete. Use one or two of the following — not all of them: a year of rent in a major city, a down payment on a first home, two years of post-graduation travel, or monthly loan payments on $100,000 in debt (approximately $1,000 per month for 10 years on a standard repayment plan). The goal is to make the number feel real, not to overwhelm.
+
+If the four-year cost exceeds $150,000 total, flag it explicitly. The family's planning horizon includes law school, and the combined investment needs to make sense. Students who graduate with zero debt have options that students carrying $100,000 or more do not — they can take risks, travel, delay career decisions, and enter law school without compounding the debt load. Name this plainly.
+
+---
+
+If merit aid is available and the student is likely to qualify:
+
+State the published COA, the estimated merit award, and the resulting net cost clearly and in that order. Do not bury the net figure. If the student's academic profile meets the threshold for a named scholarship or aid tier, say so explicitly — "at a 1350 SAT, she is likely to qualify for X" is more useful than "merit aid is available."
+
+Present the net four-year cost alongside the UT comparison. When merit aid brings a private school into the $120,000–$160,000 range, the gap closes meaningfully and the comparison changes character. Name that shift: a school that stickers at $75,000 per year but awards $25,000 in merit aid lands at $50,000 per year — $200,000 over four years, still $70,000 more than UT but now a conversation about what the difference buys rather than whether the number is feasible.
+
+If the merit award is renewable, note the conditions — GPA floor, credit hours, or anything that could interrupt it. A $20,000 award that evaporates below a 3.4 GPA is a different thing than one with no conditions. If renewal terms are unknown, flag that as something to verify directly with the financial aid office.
+
+If the net cost after merit aid falls below $150,000 for four years, do not flag it as a financial concern. Acknowledge it as a school where the numbers work and the conversation shifts to fit, program, and preference. When the numbers work, say so with some energy — this is the outcome the family is actively looking for, and Abigail should be able to read a summary and know immediately whether a school is financially viable or financially complicated.
+
+---
+
+Tone across all cases:
+
+Abigail is reading this alongside her parent. She is smart enough to handle honest numbers. Do not soften the financial picture, but do not frame it as pressure or guilt — frame it as information she deserves to have. The family is fortunate to be having this conversation at all. That is the assumed context; it does not need to be stated.
+
+If the school is Division III or NAIA, state clearly that athletic scholarships are not available under NCAA rules. Do not omit this even if it seems obvious.
 
 Study abroad and swim season conflict: If study abroad is important to Abigail based on her profile, and the school has a competitive swim season spanning both fall and spring, flag the conflict explicitly. Recommend she ask the coach directly whether swimmers have successfully completed semester-long programs abroad and which semester is realistic.
 

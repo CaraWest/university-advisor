@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getGmailClient, getHeader } from "@/lib/gmail/client";
+import { requireAuthSession } from "@/lib/require-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,9 @@ export async function GET(
   _request: Request,
   context: { params: Promise<{ messageId: string }> | { messageId: string } },
 ) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const gmail = await getGmailClient();
   if (!gmail) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
@@ -83,6 +87,9 @@ export async function DELETE(
   _request: Request,
   context: { params: Promise<{ messageId: string }> | { messageId: string } },
 ) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const gmail = await getGmailClient();
   if (!gmail) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

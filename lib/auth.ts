@@ -1,6 +1,8 @@
 import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
+import { emailIsAllowed } from "@/lib/allowed-emails";
+
 async function refreshAccessToken(token: {
   refreshToken?: string;
   accessToken?: string;
@@ -50,12 +52,17 @@ export const authOptions: NextAuthOptions = {
           scope:
             "openid email profile https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/gmail.compose",
           access_type: "offline",
-          prompt: "consent",
         },
       },
     }),
   ],
   callbacks: {
+    async signIn({ user }) {
+      if (!emailIsAllowed(user?.email)) {
+        return false;
+      }
+      return true;
+    },
     async jwt({ token, account }) {
       if (account) {
         token.accessToken = account.access_token;

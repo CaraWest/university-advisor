@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { zodErrorResponse } from "@/lib/api/zod-error-response";
 import { prisma } from "@/lib/db";
+import { requireAuthSession } from "@/lib/require-auth";
 import { coachContactPatchSchema } from "@/lib/validation/coach-contact";
 
 function jsonContact(c: {
@@ -28,6 +29,9 @@ export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string; contactId: string }> | { id: string; contactId: string } },
 ) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const params = await Promise.resolve(context.params);
   const existing = await prisma.coachContact.findFirst({
     where: { id: params.contactId, schoolId: params.id },
@@ -60,6 +64,9 @@ export async function DELETE(
   _request: Request,
   context: { params: Promise<{ id: string; contactId: string }> | { id: string; contactId: string } },
 ) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const params = await Promise.resolve(context.params);
   const existing = await prisma.coachContact.findFirst({
     where: { id: params.contactId, schoolId: params.id },

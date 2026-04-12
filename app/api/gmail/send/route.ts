@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { getGmailClient } from "@/lib/gmail/client";
+import { requireAuthSession } from "@/lib/require-auth";
 
 export async function POST(request: Request) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const gmail = await getGmailClient();
   if (!gmail) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

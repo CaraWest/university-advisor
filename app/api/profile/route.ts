@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { zodErrorResponse } from "@/lib/api/zod-error-response";
 import { prisma } from "@/lib/db";
+import { requireAuthSession } from "@/lib/require-auth";
 import { studentProfilePatchSchema } from "@/lib/validation/student-profile";
 
 export const dynamic = "force-dynamic";
@@ -9,11 +10,17 @@ export const dynamic = "force-dynamic";
 const SINGLETON_ID = "singleton";
 
 export async function GET() {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const profile = await prisma.studentProfile.findFirst();
   return NextResponse.json(profile ?? {});
 }
 
 export async function PATCH(request: Request) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   let body: unknown;
   try {
     body = await request.json();

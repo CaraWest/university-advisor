@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireAnthropicApiKey } from "@/lib/ai/call-anthropic";
 import { toAnthropicInterviewMessages } from "@/lib/ai/interview-messages";
 import { zodErrorResponse } from "@/lib/api/zod-error-response";
+import { requireAuthSession } from "@/lib/require-auth";
 
 const INTERVIEW_SYSTEM_PROMPT = `You are helping Abigail, a high school student, think through what she wants from a study abroad experience in college. Your job is to have a warm, genuinely curious conversation — not a survey. Ask one question at a time. Let her answers guide you.
 
@@ -27,6 +28,9 @@ const requestSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const apiKey = requireAnthropicApiKey();
   if (!apiKey) {
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { requireAuthSession } from "@/lib/require-auth";
 import {
   getGmailClient,
   getHeader,
@@ -11,6 +12,9 @@ import {
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const gmail = await getGmailClient();
   if (!gmail) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });

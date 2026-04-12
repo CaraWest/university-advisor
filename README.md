@@ -33,7 +33,7 @@ Local Next.js app for college search and decision support: seeded schools, SwimC
    - **`prisma db push`** — PostgreSQL schema (uses `DIRECT_URL` from `.env` when set; see Prisma + Supabase)
    - **`prisma/dev-prep.ts`** — if there are **no** schools yet, seeds the DB (same as `npm run db:seed`)
 
-5. Open **[http://localhost:3000](http://localhost:3000)** (redirects to `/schools`). You should see **144** schools after seed.
+5. Open **[http://localhost:3000](http://localhost:3000)** — you are sent to **`/login`**, then **Continue with Google**. Only emails listed in **`ALLOWED_EMAILS`** can sign in (in development, leaving it empty allows any Google account for easier local testing; in production, empty means no one can sign in). After login you land on `/schools` (or your `callbackUrl`).
 
 ### Environment variables
 
@@ -44,8 +44,14 @@ Local Next.js app for college search and decision support: seeded schools, SwimC
 | `SCORECARD_API_KEY` | For `npm run scorecard:import` | [College Scorecard API](https://api.data.gov/signup/) |
 | `ANTHROPIC_API_KEY` | For AI summaries only | [Anthropic Console](https://console.anthropic.com/) |
 | `ANTHROPIC_MODEL` | No | Override Claude model id (see [docs/ai-summary-setup.md](docs/ai-summary-setup.md)) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Yes for sign-in + Mail | [Google Cloud Console](https://console.cloud.google.com/) OAuth client |
+| `NEXTAUTH_SECRET` | Yes | `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | Yes | App origin, e.g. `http://localhost:3000` locally; **exact** production URL on Vercel (no trailing slash) |
+| `ALLOWED_EMAILS` | Yes in production | Comma-separated Google account emails allowed to use the app (case-insensitive). Empty in **production** = no sign-ins. Empty in **development** = any Google account. |
 
 Restart **`npm run dev`** after changing `.env`.
+
+**Vercel / production:** Set the same variables in the project dashboard. In Google Cloud, add your production **Authorized JavaScript origins** and redirect URI **`https://<your-domain>/api/auth/callback/google`**. Crawlers are discouraged via **`/robots.txt`** (`Disallow: /`).
 
 **First-time database:** With valid `DATABASE_URL` and `DIRECT_URL`, run **`npx prisma db push`** to apply [`prisma/schema.prisma`](prisma/schema.prisma) to your Postgres instance (also runs automatically in `npm run dev` via `predev`).
 
@@ -53,6 +59,7 @@ Restart **`npm run dev`** after changing `.env`.
 
 | Path | Purpose |
 |------|---------|
+| `/login` | Google sign-in (not shown in sidebar) |
 | `/schools` | Sortable table, lifecycle, filters |
 | `/schools/[id]` | Full school profile, notes, financials, AI summary, coach log |
 | `/map` | Leaflet map (needs lat/lng — usually Scorecard import) |
@@ -71,6 +78,8 @@ Batch JSON (Scorecard script, local **SwimCloud** fetch, or manual exports) goes
   ```bash
   curl -X POST http://localhost:3000/api/import
   ```
+
+  (That `curl` only works if you pass a valid session cookie; the UI is the usual path.)
 
 The JSON response lists each source (`school_research`, `financial`, `swimcloud`, `scorecard`): files used, rows processed, rows skipped (e.g. unknown school name), and parse errors per file when applicable.
 

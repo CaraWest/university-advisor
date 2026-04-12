@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 
 import { prisma } from "@/lib/db";
+import { requireAuthSession } from "@/lib/require-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
@@ -371,6 +372,9 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ schoolId: string }> | { schoolId: string } },
 ) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const { schoolId } = await Promise.resolve(context.params);
   const { searchParams } = new URL(request.url);
   const skipScorecard = searchParams.get("skipScorecard") === "true";

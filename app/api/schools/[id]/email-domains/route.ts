@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { requireAuthSession } from "@/lib/require-auth";
 
 export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> | { id: string } },
 ) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const params = await Promise.resolve(context.params);
   const domains = await prisma.schoolEmailDomain.findMany({
     where: { schoolId: params.id },
@@ -20,6 +24,9 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> | { id: string } },
 ) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const params = await Promise.resolve(context.params);
 
   const school = await prisma.school.findUnique({
@@ -74,6 +81,9 @@ export async function DELETE(
   request: Request,
   context: { params: Promise<{ id: string }> | { id: string } },
 ) {
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
   const params = await Promise.resolve(context.params);
   const { searchParams } = new URL(request.url);
   const domainId = searchParams.get("domainId");

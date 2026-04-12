@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
 
-import { authOptions } from "@/lib/auth";
+import { requireAuthSession } from "@/lib/require-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  return NextResponse.json({ authenticated: !!session?.accessToken });
+  const auth = await requireAuthSession();
+  if (!auth.ok) return auth.response;
+
+  const session = auth.session;
+  return NextResponse.json({ authenticated: !!session.accessToken });
 }

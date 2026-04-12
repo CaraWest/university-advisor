@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Toaster } from "sonner";
 
-import { AppShell } from "@/components/app/app-shell";
 import { SessionProvider } from "@/components/app/session-provider";
 
 import "./globals.css";
@@ -20,7 +19,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="min-h-screen antialiased">
         <SessionProvider>
-          <AppShell>{children}</AppShell>
+          {children}
           <Toaster richColors closeButton position="top-center" />
         </SessionProvider>
       </body>
