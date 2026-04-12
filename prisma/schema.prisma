@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model School {
@@ -12,19 +13,20 @@ model School {
   name             String
   state            String
   city             String?
+  scorecardId      Int? // College Scorecard API institution id
   institutionType  String
   latitude         Float?
   longitude        Float?
   distanceFromHome Float?
 
-  lifecycleStatus String  @default("Research")
+  status          String  @default("None") @map("lifecycleStatus")
   rejectionReason String?
 
-  abigailFavorite  Boolean @default(false)
-  coachContactedUs Boolean @default(false)
-  weContactedCoach Boolean @default(false)
-  campusVisit      Boolean @default(false)
-  applyEarly       Boolean @default(false)
+  abigailFavorite    Boolean @default(false)
+  interested         Boolean @default(false)
+  phoneCall          Boolean @default(false)
+  campusVisit        Boolean @default(false)
+  enrichmentComplete Boolean @default(false)
 
   notes String?
 
@@ -39,13 +41,15 @@ model School {
   academicProfile AcademicProfile?
   financialModel  FinancialModel?
   coachContacts   CoachContact[]
-  researchBlob    ResearchBlob?
+  emailDomains    SchoolEmailDomain[]
+  gmailLinks      GmailSchoolLink[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([name])
   @@index([state])
+  @@index([scorecardId])
 }
 
 model SwimData {
@@ -54,16 +58,38 @@ model SwimData {
   school            School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   ncaaDivision      String?
   hasSwimTeam       Boolean  @default(true)
+  notInSwimCloud    Boolean  @default(false)
   athleticTier      String?
   teamPowerIndexAvg Float?
-  powerIndex8th     Float?
   abigailRank       Int?
   rosterSize        Int?
   seniorsGraduating Int?
   swimcloudUrl      String?
+  /// Curated: SwimCloud /team/{id}/ — from map sync or import scrapeTeamId.
+  swimcloudTeamId   Int?
   dataCollectedAt   DateTime?
+
+  // SwimCloud page extras; scorecard still wins on shared AcademicProfile fields.
+  matchScore        Int?
+  teamRankDisplay   String?
+  conference        String?
+  athleteEvent      String?
+  distanceMiles     Int?
+  schoolSize        String?
+  pageCity          String?
+  pageState         String?
+  pageSetting       String?
+  // Observed net cost on SwimCloud page; FinancialModel.estimatedNetCost when that slot is empty.
+  swimcloudAvgNetCost Int?
+  // Full validated school row JSON for keys not mapped to columns.
+  importSnapshotJson  String?
+  // Enrichment (Claude web_search): swimming/diving coaching staff from official athletics site; JSON array of { name, title?, email?, phone?, profileUrl? }.
+  coachingStaffJson   String?
+
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  @@index([swimcloudTeamId])
 }
 
 model AcademicProfile {
@@ -76,16 +102,18 @@ model AcademicProfile {
   programNotes        String?
   studyAbroadLevel    String?
   studyAbroadNotes    String?
-  majorFlexibility    String?
   acceptanceRate      Float?
   satMid50Low         Int?
   satMid50High        Int?
+  satMathMid50Low     Int?
+  satMathMid50High    Int?
+  satEBRWMid50Low     Int?
+  satEBRWMid50High    Int?
   enrollmentSize      Int?
   setting             String?
   retentionRate       Float?
   gradRate4Year       Float?
   studentFacultyRatio Float?
-  lawSchoolAcceptRate Float?
   t14Placements       String?
   preLawQuality       String?
   feederReputation    String?
@@ -99,15 +127,15 @@ model FinancialModel {
   schoolId             String   @unique
   school               School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
   publishedCOA         Int?
+  averageAnnualCost    Int? // College Scorecard latest.cost.avg_net_price.overall (AAC / avg net price)
   tuition              Int?
   roomAndBoard         Int?
   feesAndOther         Int?
-  meritAidAvailable    Boolean?
-  meritAidThreshold    String?
   estimatedMeritAid    Int?
   athleticAidAvailable Boolean?
   estimatedAthleticAid Int?
   needAidLikely        Boolean?
+  avgNetCostHighIncome Int?
   estimatedNetCost     Int?
   fourYearEstimate     Int?
   financialNotes       String?
@@ -123,7 +151,7 @@ model CoachContact {
   direction    String
   type         String
   summary      String
-  rawContent   String? // JSON text; Prisma 5 + SQLite has no Json type (upgrade to Prisma 6.2+ to use Json)
+  rawContent   String? // JSON text; optional future migration to Prisma Json
   draftedReply Boolean  @default(false)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -131,25 +159,42 @@ model CoachContact {
   @@index([schoolId])
 }
 
-model ResearchBlob {
-  id              String   @id @default(cuid())
-  schoolId        String   @unique
-  school          School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
-  programDepth    String?
-  studyAbroad     String?
-  lawSchoolDetail String?
-  swimDetail      String?
-  notableFacts    String?
-  rawJson         String? // JSON text; Prisma 5 + SQLite has no Json type
-  collectedAt     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model SchoolEmailDomain {
+  id        String   @id @default(cuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  domain    String   @unique
+  createdAt DateTime @default(now())
+
+  @@index([schoolId])
 }
 
-model AppSettings {
-  id              String   @id @default(cuid())
-  summaryPrompt   String?
-  promptUpdatedAt DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+model GmailSchoolLink {
+  id             String   @id @default(cuid())
+  schoolId       String
+  school         School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  gmailMessageId String   @unique
+  senderEmail    String
+  subject        String?
+  linkedAt       DateTime @default(now())
+
+  @@index([schoolId])
+}
+
+model StudentProfile {
+  id                  String   @id @default(cuid())
+  powerIndex          Float?
+  satMath             Int?
+  satEBRW             Int?
+  satComposite        Int?
+  gpa                 Float?
+  graduationYear      Int?
+  studyAbroadInterest Boolean  @default(true)
+  divisionPreference  String?
+  sizePreference      String?
+  geographyNotes      String?
+  writingProfile      String?
+  studyAbroadProfile  String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }

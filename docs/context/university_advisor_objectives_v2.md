@@ -61,9 +61,9 @@ Abigail has stated she wants to swim in college. Athletic fit is evaluated again
 |---|---|---|
 | Recruit target | 35–65 | Actively pursue coach contact |
 | Walk-on possible | 21–34 | Swim may happen; don't lead with it |
-| Below threshold | Under 20 | Removed from active list via Cowork filter |
+| Below threshold | Under 20 | Recruiting expectation is low; tier is shown in the app for triage, not hidden |
 
-The Power Index cutoff of 20 was used as the initial filter on the 109-school swim list. Schools below that threshold are removed — the gap is too large to close in the available timeline regardless of academic merit.
+The Power Index cutoff of 20 was used as the initial filter on the 109-school swim list. The gap is often too large to close in the available timeline regardless of academic merit; families may still deprioritize these schools outside the app.
 
 ---
 

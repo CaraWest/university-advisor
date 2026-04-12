@@ -1,24 +1,20 @@
 import type { PrismaClient } from "@prisma/client";
 import { SEED_SCHOOLS } from "./seed-schools";
 
-/** Wipes schools + related rows and AppSettings, then inserts seed data and one AppSettings row. */
+/** Wipes schools + related rows, then inserts seed data. */
 export async function reseedAll(prisma: PrismaClient) {
+  if (process.env.CONFIRM_RESEED !== "true") {
+    throw new Error(
+      "reseedAll wipes ALL data. Set CONFIRM_RESEED=true to proceed.",
+    );
+  }
   await prisma.$transaction([
     prisma.coachContact.deleteMany(),
     prisma.swimData.deleteMany(),
     prisma.academicProfile.deleteMany(),
     prisma.financialModel.deleteMany(),
-    prisma.researchBlob.deleteMany(),
     prisma.school.deleteMany(),
-    prisma.appSettings.deleteMany(),
   ]);
-
-  await prisma.appSettings.create({
-    data: {
-      summaryPrompt: null,
-      promptUpdatedAt: null,
-    },
-  });
 
   await prisma.school.createMany({
     data: SEED_SCHOOLS.map((row) => ({
@@ -26,12 +22,11 @@ export async function reseedAll(prisma: PrismaClient) {
       state: row.state,
       city: row.city,
       institutionType: row.institutionType,
-      lifecycleStatus: "Research",
+      status: "None",
       abigailFavorite: false,
-      coachContactedUs: false,
-      weContactedCoach: false,
+      interested: false,
+      phoneCall: false,
       campusVisit: false,
-      applyEarly: false,
     })),
   });
 }

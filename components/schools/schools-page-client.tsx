@@ -2,22 +2,31 @@
 
 import * as React from "react";
 
-import type { SchoolListRow } from "@/lib/types/school-list";
+import { SchoolsListSkeleton } from "@/components/schools/schools-list-skeleton";
 import { SchoolsDataTable } from "@/components/schools/schools-data-table";
+import type { SchoolListRow } from "@/lib/types/school-list";
+import type { SchoolStatus } from "@/lib/validation/school";
 
-export function SchoolsPageClient() {
+type SchoolsPageClientProps = {
+  statusFilter: SchoolStatus | null;
+};
+
+export function SchoolsPageClient({ statusFilter }: SchoolsPageClientProps) {
   const [rows, setRows] = React.useState<SchoolListRow[] | null>(null);
+  const [userSatComposite, setUserSatComposite] = React.useState<number | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch("/api/schools");
+        const res = await fetch("/api/schools", { cache: "no-store" });
         if (!res.ok) throw new Error(`Request failed (${res.status})`);
-        const data: unknown = await res.json();
-        if (!Array.isArray(data)) throw new Error("Invalid response shape");
-        if (!cancelled) setRows(data as SchoolListRow[]);
+        const data = (await res.json()) as { schools: SchoolListRow[]; userSatComposite: number | null };
+        if (!cancelled) {
+          setRows(data.schools);
+          setUserSatComposite(data.userSatComposite);
+        }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "Failed to load schools");
       }
@@ -36,8 +45,8 @@ export function SchoolsPageClient() {
   }
 
   if (!rows) {
-    return <p className="text-sm text-muted-foreground">Loading schools…</p>;
+    return <SchoolsListSkeleton />;
   }
 
-  return <SchoolsDataTable data={rows} />;
+  return <SchoolsDataTable data={rows} statusFilter={statusFilter} userSatComposite={userSatComposite} />;
 }

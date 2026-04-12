@@ -125,12 +125,24 @@ model SwimData {
 
   // Power Index
   teamPowerIndexAvg Float?    // SwimCloud team average
-  powerIndex8th     Float?    // 8th-place swimmer — positioning proxy
   abigailRank       Int?      // Her projected rank on this roster
 
   // Roster
   rosterSize        Int?
   seniorsGraduating Int?      // Current year graduating seniors
+
+  // SwimCloud “how do I fit” / page scrape (see also importSnapshotJson)
+  matchScore          Int?
+  teamRankDisplay     String?
+  conference          String?
+  athleteEvent        String?
+  distanceMiles       Int?
+  schoolSize          String?
+  pageCity            String?
+  pageState           String?
+  pageSetting         String?
+  swimcloudAvgNetCost Int?
+  importSnapshotJson  String? // full row JSON including unknown keys
 
   // Source metadata
   swimcloudUrl      String?   // Source page URL for verification
@@ -149,19 +161,25 @@ model SwimData {
 | hasSwimTeam | SwimCloud | Cowork import |
 | athleticTier | Derived | Calculated on import from teamPowerIndexAvg |
 | teamPowerIndexAvg | SwimCloud | Cowork import |
-| powerIndex8th | SwimCloud | Cowork import |
 | abigailRank | SwimCloud | Cowork import |
 | rosterSize | SwimCloud | Cowork import |
 | seniorsGraduating | SwimCloud | Cowork import |
-| swimcloudUrl | SwimCloud | Cowork import |
+| swimcloudUrl | SwimCloud | File import |
+| swimcloudTeamId | Curated map (`npm run swimcloud:map:sync`) or swim scrape `scrapeTeamId` | Stable link to SwimCloud team |
 | dataCollectedAt | Cowork | Set on import |
+
+**Consortium programs:** One SwimCloud team id should map to **one** representative `School` row (e.g. a joint program listed under a single college’s `scorecardId`). Duplicating the same `swimcloudTeamId` across multiple schools is discouraged unless deliberate.
+
+**Canonical naming (follow-up):** A future option is `School.scorecardInstitutionName` filled from Scorecard apply and used before `name` for string-only import resolution, avoiding mass renames of `School.name`.
+| matchScore, teamRankDisplay, conference, athleteEvent, distanceMiles, schoolSize, pageCity, pageState, pageSetting, swimcloudAvgNetCost | SwimCloud page | Cowork import |
+| importSnapshotJson | SwimCloud | Full parsed school row JSON |
 
 **Athletic tier derivation logic:**
 
 ```
 teamPowerIndexAvg >= 35  →  "Recruit target"
 teamPowerIndexAvg 20–34  →  "Walk-on possible"
-teamPowerIndexAvg < 20   →  "Below threshold" (school removed from active list)
+teamPowerIndexAvg < 20   →  "Below threshold"
 ```
 
 ---
@@ -187,13 +205,14 @@ model AcademicProfile {
   studyAbroadLevel    String?   // "Core requirement" | "Strong culture" | "Available"
   studyAbroadNotes    String?   // Specific programs, partner institutions, participation rate
 
-  // Primary major flexibility
-  majorFlexibility    String?   // Notes on ability to explore/discover primary major
-
   // Academics
   acceptanceRate      Float?    // Overall institutional acceptance rate (percentage)
-  satMid50Low         Int?      // SAT mid-50% lower bound
-  satMid50High        Int?      // SAT mid-50% upper bound
+  satMid50Low         Int?      // SAT composite mid-50% lower bound (math + EBRW)
+  satMid50High        Int?      // SAT composite mid-50% upper bound (math + EBRW)
+  satMathMid50Low     Int?      // SAT Math section mid-50% lower bound (200-800)
+  satMathMid50High    Int?      // SAT Math section mid-50% upper bound (200-800)
+  satEBRWMid50Low     Int?      // SAT Evidence-Based Reading & Writing mid-50% lower bound (200-800)
+  satEBRWMid50High    Int?      // SAT Evidence-Based Reading & Writing mid-50% upper bound (200-800)
   enrollmentSize      Int?      // Total undergraduate enrollment
   setting             String?   // "Urban" | "Suburban" | "Rural" | "College town"
   retentionRate       Float?    // First-year retention rate (percentage)
@@ -201,7 +220,6 @@ model AcademicProfile {
   studentFacultyRatio Float?    // e.g. 10 for 10:1
 
   // Law school outcomes
-  lawSchoolAcceptRate Float?    // Percentage of applicants accepted to law school
   t14Placements       String?   // Qualitative or count of T14 placements
   preLawQuality       String?   // "Strong" | "Adequate" | "Checkbox"
   feederReputation    String?   // Qualitative note on law school admissions recognition
@@ -224,7 +242,6 @@ model AcademicProfile {
 | programNotes | Cowork | Cowork import |
 | studyAbroadLevel | Cowork | Cowork import |
 | studyAbroadNotes | Cowork | Cowork import |
-| majorFlexibility | Cowork | Cowork import |
 | acceptanceRate | Common Data Set / US News | Cowork import |
 | satMid50Low/High | Common Data Set / US News | Cowork import |
 | enrollmentSize | US News / school | Cowork import |
@@ -232,7 +249,6 @@ model AcademicProfile {
 | retentionRate | US News | Cowork import |
 | gradRate4Year | US News | Cowork import |
 | studentFacultyRatio | US News | Cowork import |
-| lawSchoolAcceptRate | School reported / ABA | Cowork import |
 | t14Placements | School reported / LinkedIn | Cowork import |
 | preLawQuality | Cowork research | Cowork import |
 | feederReputation | Cowork research | Cowork import |
@@ -256,8 +272,6 @@ model FinancialModel {
   feesAndOther          Int?    // Fees, books, personal
 
   // Aid estimates
-  meritAidAvailable     Boolean?  // Does this school offer merit aid?
-  meritAidThreshold     String?   // GPA/SAT range where aid becomes available
   estimatedMeritAid     Int?      // Annual estimate based on her profile
   athleticAidAvailable  Boolean?  // DI/DII only — DIII/NAIA cannot offer athletic aid
   estimatedAthleticAid  Int?      // Annual estimate if applicable
@@ -280,13 +294,12 @@ model FinancialModel {
 | Field | Source | Method |
 |---|---|---|
 | publishedCOA | School financial aid page | Cowork import |
+| averageAnnualCost | College Scorecard | Scorecard import / enrich (`latest.cost.avg_net_price.overall`). Distinct from `avgNetCostHighIncome` (net price for $110k+ income cohort only). |
 | tuition | School financial aid page | Cowork import |
 | roomAndBoard | School financial aid page | Cowork import |
 | feesAndOther | School financial aid page | Cowork import |
-| meritAidAvailable | School financial aid page | Cowork import |
-| meritAidThreshold | School financial aid page | Cowork import |
 | estimatedMeritAid | Parent judgment | Manual in app |
-| athleticAidAvailable | Division rules | Derived from ncaaDivision |
+| athleticAidAvailable | Division rules | Derived from `SwimData.ncaaDivision` (normalize SwimCloud labels such as `Division 1` / `Division 2` / `Division 3` to DI/DII/DIII; same aid rules as `DI`/`DII`/`DIII`/`NAIA`) |
 | estimatedAthleticAid | Parent judgment | Manual in app |
 | needAidLikely | Parent judgment | Manual in app (likely false at $400k) |
 | estimatedNetCost | Derived | Calculated in app |
@@ -359,6 +372,8 @@ model AppSettings {
 }
 ```
 
+**Operator setup:** where to put the Anthropic API key, how to choose a model, and how the prompt is saved (DB + `/settings`) is documented in [**docs/ai-summary-setup.md**](../ai-summary-setup.md).
+
 **AI summary prompt context rules:**
 
 The following are injected into the prompt at generation time:
@@ -377,29 +392,35 @@ Null and empty fields are omitted from the prompt context — only populated fie
 
 ---
 
-## 3. Cowork Import Contract
+## 3. Batch import contract (JSON envelopes)
 
-Cowork outputs structured JSON files to `/data/imports/`. The app exposes a Next.js API route at `POST /api/import` that reads a file, matches on school name, and upserts fields. Source files are retained after import for audit purposes.
+JSON files under `data/imports/` are validated with **`lib/validation/import-envelope.ts`** and merged by prefix. Sources include local **SwimCloud fetch** (`npm run swimcloud:fetch`), **College Scorecard** export, and manual research/financial batches. The app exposes **`POST /api/import`** and **`npm run import:run`**; schools are matched by name and fields are upserted. Files are retained after import for audit.
 
-**One file per data source. Three source types in V1:**
+**One file per data source. Four source types in V1:**
 
 ---
 
 ### 3.1 SwimCloud Import
 
-**File naming:** `swimcloud_YYYY-MM-DD.json`
+**File naming:** `swimcloud_YYYY-MM-DD.json` (batches may use suffixes, e.g. `swimcloud_2026-03-29_batch1.json`).
+
+Optional top-level **`stats`** object (batch metadata) is ignored by persistence but allowed by validation.
+
+Each school row may include **any extra keys**; they are preserved in `SwimData.importSnapshotJson` as JSON. Known keys are mapped to `SwimData` columns (team PI, roster, match metadata, page city/state/setting, `swimcloudAvgNetCost`, etc.).
+
+**Overlap with College Scorecard (academic + net cost):** SwimCloud may carry `acceptanceRate`, SAT mid-50, `enrollmentSize`, `setting`, `retentionRate`, `gradRate4Year`, and `avgNetCost`. On import, those values are written to **`AcademicProfile`** / **`FinancialModel.estimatedNetCost`** only when the corresponding database field is still **null** — a later or earlier **scorecard** import **supersedes** those slots when it supplies a value. SwimCloud’s own copy of page metrics remains on **`SwimData`** (`pageCity`, `pageState`, `pageSetting`, `swimcloudAvgNetCost`, full **`importSnapshotJson`**), so **no source data is discarded**.
 
 ```json
 {
   "source": "swimcloud",
   "collectedAt": "2026-03-29T10:00:00Z",
+  "stats": { "batchNumber": 1, "batchOf": 139 },
   "schools": [
     {
       "name": "Davidson College",
       "ncaaDivision": "DIII",
       "hasSwimTeam": true,
       "teamPowerIndexAvg": 44.2,
-      "powerIndex8th": 52.1,
       "abigailRank": 6,
       "rosterSize": 18,
       "seniorsGraduating": 3,
@@ -431,7 +452,6 @@ Cowork outputs structured JSON files to `/data/imports/`. The app exposes a Next
       "programNotes": "Strong political science department; IR major well-regarded for law school prep",
       "studyAbroadLevel": "Strong culture",
       "studyAbroadNotes": "Dean Rusk International Studies Program; ~60% of students study abroad",
-      "majorFlexibility": "Open curriculum allows major discovery through sophomore year",
       "acceptanceRate": 19.2,
       "satMid50Low": 1340,
       "satMid50High": 1500,
@@ -440,7 +460,6 @@ Cowork outputs structured JSON files to `/data/imports/`. The app exposes a Next
       "retentionRate": 95.0,
       "gradRate4Year": 91.0,
       "studentFacultyRatio": 10,
-      "lawSchoolAcceptRate": 78.0,
       "t14Placements": "Consistent T14 placements; Harvard, Virginia, Duke noted",
       "preLawQuality": "Strong",
       "feederReputation": "Well-regarded in law school admissions offices regionally and nationally",
@@ -473,13 +492,59 @@ Cowork outputs structured JSON files to `/data/imports/`. The app exposes a Next
       "tuition": 57200,
       "roomAndBoard": 13800,
       "feesAndOther": 1400,
-      "meritAidAvailable": true,
-      "meritAidThreshold": "Top 25% of applicant pool; approximately 3.9 GPA / 1450 SAT",
       "athleticAidAvailable": false
     }
   ]
 }
 ```
+
+---
+
+### 3.4 Scorecard import
+
+Population script: `scripts/scorecard-import.ts` (reads `School` rows from the DB, queries the [College Scorecard API](https://api.data.gov/ed/collegescorecard/v1/schools.json), writes this file). **File naming:** `scorecard_YYYY-MM-DD.json`
+
+```json
+{
+  "source": "scorecard",
+  "collectedAt": "2026-03-29T10:00:00Z",
+  "schools": [
+    {
+      "name": "Davidson College",
+      "state": "NC",
+      "scorecardId": 198385,
+      "city": "Davidson",
+      "latitude": 35.499767,
+      "longitude": -80.843979,
+      "acceptanceRate": 13.37,
+      "satMid50Low": 1400,
+      "satMid50High": 1530,
+      "satMathMid50Low": 710,
+      "satMathMid50High": 780,
+      "satEBRWMid50Low": 690,
+      "satEBRWMid50High": 750,
+      "enrollmentSize": 1867,
+      "setting": "Large suburb",
+      "retentionRate": 94.61,
+      "gradRate4Year": 91.07,
+      "studentFacultyRatio": 9,
+      "dataCollectedAt": "2026-03-29T10:00:00Z",
+      "publishedCOA": 79475,
+      "averageAnnualCost": 28500,
+      "tuition": 64410,
+      "roomAndBoard": 17100,
+      "feesAndOther": 2750
+    }
+  ]
+}
+```
+
+- **`state`:** Included so `POST /api/import` can reject a row if it does not match the `School.state` in the database (parity with script matching).
+- **School fields:** `scorecardId` (API `id`), `city`, `latitude`, `longitude`. Omit keys the API did not supply; the script logs which Prisma-aligned fields were null.
+- **AcademicProfile fields (subset):** `acceptanceRate` (percent 0–100), `satMid50Low` / `satMid50High` (composite SAT: math + EBRW at 25th / 75th percentiles), `satMathMid50Low` / `satMathMid50High` (Math section 25th / 75th), `satEBRWMid50Low` / `satEBRWMid50High` (EBRW section 25th / 75th), `enrollmentSize`, `setting` (from `school.locale` via IPEDS-style locale codes, e.g. 21 → “Large suburb”), `retentionRate`, `gradRate4Year`, `studentFacultyRatio`, optional `dataCollectedAt`.
+- **FinancialModel fields (subset):** `publishedCOA` from `latest.cost.attendance.academic_year`; `tuition` from the greater of `latest.cost.tuition.in_state` and `latest.cost.tuition.out_of_state` when only one cohort applies; `roomAndBoard` from `latest.cost.roomboard.oncampus`; `feesAndOther` from `latest.cost.booksupply` + `latest.cost.otherexpense.oncampus` (or `offcampus` / `withfamily` fallbacks when on-campus is null). Merit aid fields are omitted unless a later mapping is added from the Scorecard data dictionary.
+
+Matching for the script is by **state** plus a deterministic **name** comparison (`normalizeForScorecardMatch` in [`lib/import/scorecard-name-match.ts`](../../lib/import/scorecard-name-match.ts): dashes/` at `, `&`, optional leading **The**, common branch suffixes, parenthetical disambiguators, etc.) and explicit **display-title overrides** in [`lib/import/scorecard-institution-overrides.ts`](../../lib/import/scorecard-institution-overrides.ts) when Scorecard still uses a different official name (e.g. Notre Dame, Columbia’s full legal title, Virginia Tech). Optional **extra search queries** (e.g. short tokens) run only when the canonical name finds zero matches, never after an ambiguous multi-hit. **Ambiguous or zero API rows after filtering: skip and log — no guessing.**
 
 ---
 
@@ -493,7 +558,7 @@ These fields are calculated by the application on import or on demand — they a
 | athleticTier | SwimData | teamPowerIndexAvg ≥ 35 → "Recruit target"; 20–34 → "Walk-on possible"; < 20 → "Below threshold" |
 | estimatedNetCost | FinancialModel | publishedCOA − estimatedMeritAid − estimatedAthleticAid |
 | fourYearEstimate | FinancialModel | estimatedNetCost × 4 |
-| athleticAidAvailable | FinancialModel | true only if ncaaDivision = "DI" or "DII" |
+| athleticAidAvailable | FinancialModel | true only if division resolves to DI or DII (including SwimCloud `Division 1` / `Division 2` after normalization); false for DIII and NAIA |
 
 ---
 
@@ -522,7 +587,7 @@ All other fields are null at seed time and populated via Cowork import or manual
 | rejectionReason only valid when lifecycleStatus = "Rejected" | School.rejectionReason |
 | athleticAidAvailable must be false for DIII and NAIA | FinancialModel.athleticAidAvailable |
 | estimatedNetCost cannot be negative | FinancialModel.estimatedNetCost |
-| powerIndex values must be between 1 and 100 | SwimData.teamPowerIndexAvg, powerIndex8th |
+| powerIndex values must be between 1 and 100 | SwimData.teamPowerIndexAvg |
 | acceptanceRate must be between 0 and 100 | AcademicProfile.acceptanceRate |
 | satMid50Low must be less than satMid50High | AcademicProfile |
 | AppSettings has exactly one row | AppSettings |

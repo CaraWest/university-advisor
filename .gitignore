@@ -12,3 +12,12 @@ build/
 # Prisma (local SQLite during dev)
 *.db
 *.db-journal
+*.db.bak
+prisma/backups/
+prisma/.dev-seeded
+
+# Batch imports (operational artifacts; DB is source of truth)
+data/imports/*.json
+
+# SwimCloud Playwright session (never commit)
+.local/

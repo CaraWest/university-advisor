@@ -1,15 +1,33 @@
-import { SchoolsPageClient } from "@/components/schools/schools-page-client";
+import type { Metadata } from "next";
 
-export default function SchoolsPage() {
+import { SchoolsPageClient } from "@/components/schools/schools-page-client";
+import { parseSchoolListStatusFilter, type SchoolStatus } from "@/lib/validation/school";
+import { schoolStatusLabel } from "@/lib/school-status-ui";
+
+type SchoolsPageProps = {
+  searchParams: { status?: string | string[] };
+};
+
+export function generateMetadata({ searchParams }: SchoolsPageProps): Metadata {
+  const statusFilter = parseSchoolListStatusFilter(searchParams.status);
+  const title = statusFilter
+    ? `${schoolStatusLabel(statusFilter as SchoolStatus)} — Schools`
+    : "Schools";
+  return { title };
+}
+
+export default function SchoolsPage({ searchParams }: SchoolsPageProps) {
+  const statusFilter = parseSchoolListStatusFilter(searchParams.status);
+  const heading = statusFilter
+    ? `Schools — ${schoolStatusLabel(statusFilter as SchoolStatus)}`
+    : "Schools";
+
   return (
-    <div className="container max-w-6xl py-8">
+    <div className="w-full min-w-0 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Schools</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Seeded list from SQLite. Data loads via <code className="rounded bg-muted px-1 py-0.5 text-xs">GET /api/schools</code>.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">{heading}</h1>
       </div>
-      <SchoolsPageClient />
+      <SchoolsPageClient statusFilter={statusFilter} />
     </div>
   );
 }

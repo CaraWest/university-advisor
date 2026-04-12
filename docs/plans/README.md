@@ -10,7 +10,7 @@ Each phase is a **separate plan file** with a **Stop & test** section so you can
 |-------|------|----------|
 | 1 | [phase-01-scaffold-list.md](phase-01-scaffold-list.md) | Next.js 14, shadcn, Prisma + seed, schools **list** from DB |
 | 2 | [phase-02-detail-tagging.md](phase-02-detail-tagging.md) | Detail page, tagging, notes, coach contacts (minimal CRUD) |
-| 3 | [phase-03-import-athletics.md](phase-03-import-athletics.md) | Cowork import route, derived fields, athletic list UX + below-threshold toggle |
+| 3 | [phase-03-import-athletics.md](phase-03-import-athletics.md) | Cowork import route, derived fields, athletic list UX |
 | 4 | [phase-04-financial.md](phase-04-financial.md) | Financial section on detail, manual + derived cost UI |
 | 5 | [phase-05-ai-settings.md](phase-05-ai-settings.md) | `/settings` prompt, generate/regenerate summary (Anthropic, env model) |
 | 6 | [phase-06-map.md](phase-06-map.md) | Leaflet map, markers, filters |

@@ -12,7 +12,7 @@
 1. **Dependencies:** Leaflet + React binding (e.g. `react-leaflet`) or minimal imperative Leaflet in `useEffect` — choose simpler for teaching.
 2. **Route:** e.g. `/map` or tab from schools — pick one navigation pattern and document in README.
 3. **Markers:** Popups with name + key tags; link to detail page.
-4. **Filters:** Reuse filter concepts from list (e.g. lifecycle, below-threshold toggle if applicable).
+4. **Filters:** Reuse filter concepts from list (e.g. text search); no tier-based hiding.
 5. **shadcn:** Popover/Sheet for filter panel optional.
 6. **Performance:** Acceptable for ~144 points; no clustering required in V1 unless needed on hardware.
 

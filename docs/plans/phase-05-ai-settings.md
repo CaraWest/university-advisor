@@ -28,6 +28,7 @@
 
 ## References
 
+- [docs/ai-summary-setup.md](../ai-summary-setup.md) — API key, `ANTHROPIC_MODEL`, and how `summaryPrompt` is stored
 - [university_advisor_data_spec.md](../context/university_advisor_data_spec.md) — `AppSettings`, AI context table
 - [university_advisor_objectives_v2.md](../context/university_advisor_objectives_v2.md) — §8 AI design
 

@@ -1,9 +1,6 @@
-import type { SeedSchool } from "../../prisma/seed-schools";
-
 /**
- * Normalizes a school name for case-insensitive matching: NFKC, trim,
+ * Normalizes a school name for matching: NFKC, trim,
  * collapse internal whitespace, unify common dash characters to ASCII hyphen, lowercase.
- * Import parsers and the seed lookup must use the same function.
  */
 export function normalizeImportSchoolName(raw: string): string {
   let s = raw.normalize("NFKC").trim();
@@ -14,10 +11,9 @@ export function normalizeImportSchoolName(raw: string): string {
 
 /**
  * After normalizeImportSchoolName, map alternate spellings to the exact `School.name`
- * string stored in the DB (see prisma/seed-schools.ts). Keys must be normalized
- * with normalizeImportSchoolName.
+ * string stored in the DB. Keys must be normalized with normalizeImportSchoolName.
  *
- * Expand only when Cowork or a source consistently uses a different label —
+ * Expand only when an import source consistently uses a different label —
  * avoid fuzzy matching in code.
  */
 export const COWORK_NAME_ALIASES: Record<string, string> = {
@@ -52,40 +48,46 @@ export const COWORK_NAME_ALIASES: Record<string, string> = {
   "st louis university": "Saint Louis University",
   "saint olaf college": "St. Olaf College",
   "st. olaf college": "St. Olaf College",
+  "st olaf college": "St. Olaf College",
 
   // William & Mary
   "william and mary": "William & Mary",
+
+  // University of California (Scorecard / SwimCloud hyphen, no spaces around dash)
+  "university of california-berkeley": "University of California — Berkeley",
+  "university of california-davis": "University of California — Davis",
+  "university of california-los angeles": "University of California — Los Angeles",
+  "university of california-san diego": "University of California — San Diego",
+
+  // Sewanee / Miami / Maryland — alternate labels on SwimCloud
+  "university of the south (sewanee)": "Sewanee — University of the South",
+  "university of miami (florida)": "University of Miami",
+  "university of maryland": "University of Maryland — College Park",
+
+  // Claremont consortium combined swim teams
+  "claremont mckenna-harvey mudd-scripps colleges": "Claremont McKenna College",
+  "claremont-mudd-scripps": "Claremont McKenna College",
+  "pomona-pitzer colleges": "Pomona College",
+
+  // SwimCloud disambiguator suffixes
+  "trinity college (connecticut)": "Trinity College",
+  "wheaton college (massachusetts)": "Wheaton College",
+  "king's college (pennsylvania)": "King's College (PA)",
+
+  // Missing separator / qualifier
+  "university of colorado boulder": "University of Colorado — Boulder",
+
+  // SwimCloud short campus names → full seed names
+  "indiana university": "Indiana University — Bloomington",
+  "university of illinois": "University of Illinois — Urbana-Champaign",
+  "university of michigan": "University of Michigan — Ann Arbor",
+  "university of minnesota": "University of Minnesota — Twin Cities",
+  "university of texas": "University of Texas at Austin",
+  "university of wisconsin-madison": "University of Wisconsin — Madison",
+
+  // Washington University (Missouri) — SwimCloud label
+  "washington university (missouri)": "Washington University in St. Louis",
+
+  // Lewis "and" vs "&"
+  "lewis and clark college": "Lewis & Clark College",
 };
-
-export type SeedNameLookup = Map<string, string>;
-
-/** normalized name → exact seed `name` as stored in the database */
-export function buildSeedNameLookup(schools: SeedSchool[]): SeedNameLookup {
-  const map: SeedNameLookup = new Map();
-  for (const row of schools) {
-    const key = normalizeImportSchoolName(row.name);
-    if (map.has(key)) {
-      throw new Error(
-        `Duplicate seed name after normalization: "${row.name}" collides with "${map.get(key)}" (key: "${key}")`,
-      );
-    }
-    map.set(key, row.name);
-  }
-  return map;
-}
-
-/**
- * Resolves an import file school name to the canonical seed name, or null if unknown.
- * Unknown names should be logged and skipped — never silently create schools.
- */
-export function resolveImportSchoolName(
-  raw: string,
-  seedLookup: SeedNameLookup,
-): string | null {
-  const normalizedInput = normalizeImportSchoolName(raw);
-  const aliasedCanonical = COWORK_NAME_ALIASES[normalizedInput];
-  const key = aliasedCanonical
-    ? normalizeImportSchoolName(aliasedCanonical)
-    : normalizedInput;
-  return seedLookup.get(key) ?? null;
-}

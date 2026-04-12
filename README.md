@@ -1,55 +1,112 @@
 # University Advisor
 
-Local Next.js app for college search and decision support. Phase 1: seeded school list from SQLite via Prisma.
+Local Next.js app for college search and decision support: seeded schools, SwimCloud / Scorecard imports, financial estimates, AI summaries, and a map.
 
 ## Requirements
 
 - **Node.js** (LTS recommended) and **npm**
 
-## Day-to-day
+## From zero to running
 
-From the project folder:
+1. Clone the repo and `cd` into the project folder.
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+   (`npm install` runs **`prisma generate`** via `postinstall`.)
+
+3. Environment file:
+   - If **`.env`** does not exist, **`npm run dev`** copies **`.env.example`** to **`.env`** (see `scripts/ensure-env.mjs`).
+   - To set variables before the first run: `cp .env.example .env` and edit.
+
+4. Start the app:
+
+   ```bash
+   npm run dev
+   ```
+
+   That runs (before Next.js starts):
+
+   - **`prisma db push`** — PostgreSQL schema (uses `DIRECT_URL` from `.env` when set; see Prisma + Supabase)
+   - **`prisma/dev-prep.ts`** — if there are **no** schools yet, seeds the DB (same as `npm run db:seed`)
+
+5. Open **[http://localhost:3000](http://localhost:3000)** (redirects to `/schools`). You should see **144** schools after seed.
+
+### Environment variables
+
+| Variable | Required | Purpose |
+|----------|----------|---------|
+| `DATABASE_URL` | Yes (default in `.env.example`) | PostgreSQL connection string; with Supabase, use the **pooler** URI (often port `6543`) and add `?pgbouncer=true&connection_limit=1` as in [Prisma’s Supabase guide](https://www.prisma.io/docs/guides/database/supabase) |
+| `DIRECT_URL` | Yes (in `.env.example`) | Same database over the **direct** Postgres port (often `5432`) for `prisma db push` / migrations — copy from Supabase **Database** settings |
+| `SCORECARD_API_KEY` | For `npm run scorecard:import` | [College Scorecard API](https://api.data.gov/signup/) |
+| `ANTHROPIC_API_KEY` | For AI summaries only | [Anthropic Console](https://console.anthropic.com/) |
+| `ANTHROPIC_MODEL` | No | Override Claude model id (see [docs/ai-summary-setup.md](docs/ai-summary-setup.md)) |
+
+Restart **`npm run dev`** after changing `.env`.
+
+**First-time database:** With valid `DATABASE_URL` and `DIRECT_URL`, run **`npx prisma db push`** to apply [`prisma/schema.prisma`](prisma/schema.prisma) to your Postgres instance (also runs automatically in `npm run dev` via `predev`).
+
+### Main routes (navigation bar on each page)
+
+| Path | Purpose |
+|------|---------|
+| `/schools` | Sortable table, lifecycle, filters |
+| `/schools/[id]` | Full school profile, notes, financials, AI summary, coach log |
+| `/map` | Leaflet map (needs lat/lng — usually Scorecard import) |
+| `/import` | Run **`POST /api/import`** from the browser; summary of processed / skipped rows |
+| `/settings` | Global AI prompt template (`AppSettings`) |
+
+## `data/imports/` workflow
+
+Batch JSON (Scorecard script, local **SwimCloud** fetch, or manual exports) goes under **`data/imports/`**. Filename prefixes determine the pipeline stage. Full rules: **[data/imports/README.md](data/imports/README.md)**. SwimCloud: **`npm run swimcloud:auth`** then **`npm run swimcloud:fetch`** (see **`scripts/swimcloud/README.md`**).
+
+**Apply imports** (merges all matching files per source, oldest first by file `mtime`):
+
+- **UI:** open **[http://localhost:3000/import](http://localhost:3000/import)** and click **Run import**.
+- **CLI:** `npm run import:run` (uses local `DATABASE_URL`), or with the dev server up:
+
+  ```bash
+  curl -X POST http://localhost:3000/api/import
+  ```
+
+The JSON response lists each source (`school_research`, `financial`, `swimcloud`, `scorecard`): files used, rows processed, rows skipped (e.g. unknown school name), and parse errors per file when applicable.
+
+## Day-to-day
 
 ```bash
 npm run dev
 ```
 
-That runs (automatically, before Next starts):
-
-1. **`prisma db push`** — keeps the SQLite schema in sync  
-2. **`prisma/dev-prep.ts`** — if there are **no** schools yet, seeds the DB (same data as `npm run db:seed`)
-
-Then the dev server starts. Open [http://localhost:3000/schools](http://localhost:3000/schools). You should see **144** schools once seeded.
-
-## First time on this machine
-
-```bash
-cp .env.example .env
-npm install
-```
-
-(`npm install` runs **`prisma generate`** via `postinstall`.)
-
-After that, use **`npm run dev`** only. The first `dev` will create `prisma/dev.db`, push the schema, and seed if the database is empty.
-
 ## Scripts
 
 | Script | Purpose |
 | ------ | ------- |
-| `npm run dev` | `db push` + optional auto-seed if empty, then Next.js dev server |
-| `npm run build` / `npm start` | Production build / serve (no `predev`; ensure DB exists first) |
-| `npm run db:seed` | **Full reset:** wipe schools + related data + `AppSettings`, then reseed (use when you want a clean slate) |
+| `npm run dev` | `db push` + optional auto-seed if empty, then Next.js |
+| `npm run build` / `npm start` | Production build / serve (`predev` does **not** run; ensure DB exists) |
+| `npm run db:seed` | **Full reset:** wipe schools + related data + `AppSettings`, then reseed |
 | `npm run db:studio` | Prisma Studio |
-| `npm run db:push` | Push schema only (usually not needed — `dev` does this) |
+| `npm run db:push` | Push schema only |
+| `npm run db:restore-from-sqlite` | **Destructive:** replace Postgres data from local `prisma/dev.db` (set `SQLITE_PATH` for another file) |
+| `npm run scorecard:import` | Build/normalize Scorecard JSON (needs `SCORECARD_API_KEY`) |
 
-## Stack (Phase 1)
+## Stack
 
-- Next.js **14** (App Router), TypeScript, Tailwind
-- **shadcn/ui** under `components/ui/`
-- **TanStack Table** v8 for the schools grid
-- **Prisma** + **SQLite** (`DATABASE_URL` in `.env`, e.g. `file:./dev.db`)
+- Next.js **14** (App Router), TypeScript, Tailwind, **shadcn/ui**, **TanStack Table** v8
+- **Prisma** + **PostgreSQL** (e.g. [Supabase](https://supabase.com/))
+- **Leaflet** + **react-leaflet** (map)
+- **Sonner** (toasts)
+- **Anthropic** SDK (optional, for summaries)
 
 ## Docs
 
 - Product/context: `docs/context/`
 - Phase plans: `docs/plans/`
+- AI summaries (API key, models, prompt): [docs/ai-summary-setup.md](docs/ai-summary-setup.md)
+- V2 ideas (not scheduled): [docs/backlog-v2.md](docs/backlog-v2.md)
+
+## Map tiles
+
+The map uses **OpenStreetMap** raster tiles (attribution shown on the map). No Mapbox key required for local/personal use.
