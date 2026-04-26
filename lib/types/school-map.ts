@@ -11,4 +11,9 @@ export type SchoolMapRow = {
   longitude: number | null;
   distanceFromHome: number | null;
   athleticTier: string | null;
+  abigailFavorite: boolean;
+  interested: boolean;
+  phoneCall: boolean;
+  campusVisit: boolean;
+  hasEmails: boolean;
 };

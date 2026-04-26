@@ -10,12 +10,84 @@ import { prospectChancesFromAthleticTier, ROUND_ROCK_LAT, ROUND_ROCK_LON } from 
 import { schoolStatusBadgeClassName, schoolStatusLabel } from "@/lib/school-status-ui";
 import { SCHOOL_STATUSES, type SchoolStatus } from "@/lib/validation/school";
 import { ProspectChancesBadge } from "@/components/schools/prospect-chances-badge";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 
 import "leaflet/dist/leaflet.css";
+
+const ACTIVITY_FILTERS_STORAGE_KEY = "schools-map-activity-filters-v1";
+
+type ActivityFilters = {
+  favorite: boolean;
+  email: boolean;
+  swimcloudInterest: boolean;
+  phoneCall: boolean;
+  campusVisit: boolean;
+};
+
+const DEFAULT_ACTIVITY_FILTERS: ActivityFilters = {
+  favorite: false,
+  email: false,
+  swimcloudInterest: false,
+  phoneCall: false,
+  campusVisit: false,
+};
+
+function readActivityFilters(): ActivityFilters {
+  if (typeof window === "undefined") return DEFAULT_ACTIVITY_FILTERS;
+  try {
+    const raw = window.localStorage.getItem(ACTIVITY_FILTERS_STORAGE_KEY);
+    if (!raw) return DEFAULT_ACTIVITY_FILTERS;
+    const p = JSON.parse(raw) as Partial<ActivityFilters>;
+    return {
+      favorite: Boolean(p.favorite),
+      email: Boolean(p.email),
+      swimcloudInterest: Boolean(p.swimcloudInterest),
+      phoneCall: Boolean(p.phoneCall),
+      campusVisit: Boolean(p.campusVisit),
+    };
+  } catch {
+    return DEFAULT_ACTIVITY_FILTERS;
+  }
+}
+
+/** Clickable filter control: active = primary (`default`), inactive = `secondary`. */
+function ActivityFilterToggleBadge({
+  active,
+  onToggle,
+  children,
+  "aria-label": ariaLabel,
+}: {
+  active: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+  "aria-label"?: string;
+}) {
+  return (
+    <Badge
+      role="switch"
+      aria-checked={active}
+      aria-label={ariaLabel}
+      tabIndex={0}
+      variant={active ? "default" : "secondary"}
+      className={cn(
+        "inline-flex cursor-pointer select-none rounded-full font-medium transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+      )}
+      onClick={onToggle}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onToggle();
+        }
+      }}
+    >
+      {children}
+    </Badge>
+  );
+}
 
 // Default marker assets break under bundlers; use CDN (Leaflet FAQ pattern).
 // @ts-expect-error — Leaflet replaces _getIconUrl at runtime
@@ -25,16 +97,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
-
-function rowMatchesSearch(row: SchoolMapRow, q: string): boolean {
-  const needle = q.trim().toLowerCase();
-  if (!needle) return true;
-  const hay = [row.name, row.state, row.city, row.institutionType, row.status]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-  return hay.includes(needle);
-}
 
 function FitBounds({ points }: { points: [number, number][] }) {
   const map = useMap();
@@ -56,7 +118,12 @@ function FitBounds({ points }: { points: [number, number][] }) {
 export function SchoolsMapClient() {
   const [rows, setRows] = React.useState<SchoolMapRow[] | null>(null);
   const [loadError, setLoadError] = React.useState<string | null>(null);
-  const [search, setSearch] = React.useState("");
+  const [activityFilters, setActivityFilters] = React.useState<ActivityFilters>(() => readActivityFilters());
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(ACTIVITY_FILTERS_STORAGE_KEY, JSON.stringify(activityFilters));
+  }, [activityFilters]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -84,8 +151,14 @@ export function SchoolsMapClient() {
 
   const filtered = React.useMemo(() => {
     if (!rows) return [];
-    return rows.filter((r) => rowMatchesSearch(r, search));
-  }, [rows, search]);
+    let next = rows.filter((r) => r.status !== "Rejected");
+    if (activityFilters.favorite) next = next.filter((r) => r.abigailFavorite);
+    if (activityFilters.email) next = next.filter((r) => r.hasEmails);
+    if (activityFilters.swimcloudInterest) next = next.filter((r) => r.interested);
+    if (activityFilters.phoneCall) next = next.filter((r) => r.phoneCall);
+    if (activityFilters.campusVisit) next = next.filter((r) => r.campusVisit);
+    return next;
+  }, [rows, activityFilters]);
 
   const withCoords = React.useMemo(
     () =>
@@ -112,10 +185,6 @@ export function SchoolsMapClient() {
   if (!rows) {
     return (
       <div className="space-y-4" aria-busy="true" aria-label="Loading map">
-        <div className="flex flex-col gap-3 lg:flex-row">
-          <Skeleton className="h-10 w-full max-w-md" />
-          <Skeleton className="h-5 w-56" />
-        </div>
         <Skeleton className="h-4 w-full max-w-xl" />
         <Skeleton className="h-[min(70vh,560px)] w-full rounded-lg" />
       </div>
@@ -124,23 +193,49 @@ export function SchoolsMapClient() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-2 flex-1 max-w-md">
-          <Label htmlFor="map-search">Filter</Label>
-          <Input
-            id="map-search"
-            placeholder="Name, state, city, type, or status…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
+      <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+        <ActivityFilterToggleBadge
+          active={activityFilters.favorite}
+          onToggle={() => setActivityFilters((p) => ({ ...p, favorite: !p.favorite }))}
+          aria-label="Filter to favorited schools"
+        >
+          Favorite
+        </ActivityFilterToggleBadge>
+        <ActivityFilterToggleBadge
+          active={activityFilters.email}
+          onToggle={() => setActivityFilters((p) => ({ ...p, email: !p.email }))}
+          aria-label="Filter to schools with matching email"
+        >
+          Matching Email
+        </ActivityFilterToggleBadge>
+        <ActivityFilterToggleBadge
+          active={activityFilters.swimcloudInterest}
+          onToggle={() => setActivityFilters((p) => ({ ...p, swimcloudInterest: !p.swimcloudInterest }))}
+          aria-label="Filter to schools with Swimcloud interest"
+        >
+          Swimcloud Interest
+        </ActivityFilterToggleBadge>
+        <ActivityFilterToggleBadge
+          active={activityFilters.phoneCall}
+          onToggle={() => setActivityFilters((p) => ({ ...p, phoneCall: !p.phoneCall }))}
+          aria-label="Filter to schools with phone call logged"
+        >
+          Phone Call
+        </ActivityFilterToggleBadge>
+        <ActivityFilterToggleBadge
+          active={activityFilters.campusVisit}
+          onToggle={() => setActivityFilters((p) => ({ ...p, campusVisit: !p.campusVisit }))}
+          aria-label="Filter to schools with campus visit logged"
+        >
+          Campus Visit
+        </ActivityFilterToggleBadge>
       </div>
 
       <p className="text-sm text-muted-foreground">
         Showing <strong className="text-foreground">{withCoords.length}</strong> schools on the map
         {missingCoordsInFilter.length > 0 ? (
           <>
-            ; <strong className="text-foreground">{missingCoordsInFilter.length}</strong> in this filter have no coordinates
+            ; <strong className="text-foreground">{missingCoordsInFilter.length}</strong> have no coordinates
             (import College Scorecard for lat/lng)
           </>
         ) : null}

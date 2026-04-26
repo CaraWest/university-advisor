@@ -22,7 +22,12 @@ export async function GET() {
       latitude: true,
       longitude: true,
       distanceFromHome: true,
+      abigailFavorite: true,
+      interested: true,
+      phoneCall: true,
+      campusVisit: true,
       swimData: { select: { athleticTier: true } },
+      _count: { select: { emailDomains: true, gmailLinks: true } },
     },
   });
 
@@ -37,6 +42,11 @@ export async function GET() {
     longitude: r.longitude,
     distanceFromHome: r.distanceFromHome,
     athleticTier: r.swimData?.athleticTier ?? null,
+    abigailFavorite: r.abigailFavorite,
+    interested: r.interested,
+    phoneCall: r.phoneCall,
+    campusVisit: r.campusVisit,
+    hasEmails: r._count.emailDomains > 0 || r._count.gmailLinks > 0,
   }));
 
   return NextResponse.json(payload);
