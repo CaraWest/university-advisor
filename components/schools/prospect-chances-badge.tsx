@@ -16,7 +16,7 @@ export function ProspectChancesBadge({
     return (
       <Badge
         className={cn(
-          "border-emerald-500/40 bg-emerald-500/10 font-medium text-emerald-950 shadow-none hover:bg-emerald-500/15 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-100 dark:hover:bg-emerald-500/20",
+          "rounded-full border-emerald-500/40 bg-emerald-500/10 font-medium text-emerald-950 shadow-none hover:bg-emerald-500/15 dark:border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-100 dark:hover:bg-emerald-500/20",
           className,
         )}
         variant="outline"
@@ -28,14 +28,14 @@ export function ProspectChancesBadge({
 
   if (level === "Medium") {
     return (
-      <Badge className={cn(className)} variant="warning">
+      <Badge className={cn("rounded-full", className)} variant="warning">
         Medium
       </Badge>
     );
   }
 
   return (
-    <Badge className={cn(className)} variant="secondary">
+    <Badge className={cn("rounded-full", className)} variant="secondary">
       Low
     </Badge>
   );

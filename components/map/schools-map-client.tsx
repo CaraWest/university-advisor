@@ -182,7 +182,7 @@ export function SchoolsMapClient() {
                     )}
                   </p>
                   <p className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-muted-foreground">Prospect chances:</span>
+                    <span className="text-muted-foreground">Swim Odds:</span>
                     {prospectChancesFromAthleticTier(r.athleticTier) ? (
                       <ProspectChancesBadge athleticTier={r.athleticTier} />
                     ) : (

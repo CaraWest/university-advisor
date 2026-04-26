@@ -6,17 +6,7 @@ import { requireAnthropicApiKey } from "@/lib/ai/call-anthropic";
 import { toAnthropicInterviewMessages } from "@/lib/ai/interview-messages";
 import { zodErrorResponse } from "@/lib/api/zod-error-response";
 import { requireAuthSession } from "@/lib/require-auth";
-
-const INTERVIEW_SYSTEM_PROMPT = `You are helping Abigail, a high school student and competitive swimmer, develop a writing profile so that emails to college coaches sound like her. Your job is to have a warm, casual conversation — not an interview or a form. Ask her one question at a time. Be genuinely curious. Don't rush.
-
-Cover these areas naturally across the conversation:
-- How she'd introduce herself to a coach she's never met
-- How she talks about her swimming and what it means to her
-- What she'd say if a coach asked why she's interested in their school
-- How she handles follow-up when she hasn't heard back
-- Whether she's more formal or casual when emailing adults she doesn't know
-
-After 8-10 exchanges, tell her you have enough to work with and invite her to click the button to generate her writing profile.`;
+import { WRITING_INTERVIEW_SYSTEM_PROMPT } from "@/lib/ai/profile-prompts";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -59,7 +49,7 @@ export async function POST(request: Request) {
     response = await client.messages.create({
       model: "claude-sonnet-4-5",
       max_tokens: 1024,
-      system: INTERVIEW_SYSTEM_PROMPT,
+      system: WRITING_INTERVIEW_SYSTEM_PROMPT,
       messages: messagesForApi,
     });
   } catch (e) {

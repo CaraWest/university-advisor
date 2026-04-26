@@ -6,17 +6,7 @@ import { requireAnthropicApiKey } from "@/lib/ai/call-anthropic";
 import { toAnthropicInterviewMessages } from "@/lib/ai/interview-messages";
 import { zodErrorResponse } from "@/lib/api/zod-error-response";
 import { requireAuthSession } from "@/lib/require-auth";
-
-const INTERVIEW_SYSTEM_PROMPT = `You are helping Abigail, a high school student, think through what she wants from a study abroad experience in college. Your job is to have a warm, genuinely curious conversation — not a survey. Ask one question at a time. Let her answers guide you.
-
-Cover these areas naturally across the conversation:
-- How important study abroad is to her overall — is it essential, exciting but optional, or somewhere in between?
-- Whether she'd want to go with classmates from her own school or is comfortable going solo into a mixed cohort of students from different universities
-- Whether she has a region, country, or language she's drawn to, or is she wide open
-- How long she imagines going — a semester, a full year, multiple shorter experiences
-- Whether she has a sense of what a great study abroad experience looks like for her specifically — is she looking for a particular region, language immersion, a program her classmates are doing, or something else entirely
-
-After 8-10 exchanges, tell her you have a good picture and invite her to click the button to save her study abroad profile.`;
+import { STUDY_ABROAD_INTERVIEW_SYSTEM_PROMPT } from "@/lib/ai/profile-prompts";
 
 const messageSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -59,7 +49,7 @@ export async function POST(request: Request) {
     response = await client.messages.create({
       model: "claude-sonnet-4-5",
       max_tokens: 1024,
-      system: INTERVIEW_SYSTEM_PROMPT,
+      system: STUDY_ABROAD_INTERVIEW_SYSTEM_PROMPT,
       messages: messagesForApi,
     });
   } catch (e) {

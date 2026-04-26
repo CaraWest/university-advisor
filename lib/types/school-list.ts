@@ -15,7 +15,10 @@ export type SchoolListRow = {
   /** Miles from Round Rock, TX; null when no coordinates. */
   distanceFromHome: number | null;
   enrichmentComplete: boolean;
+  abigailFavorite: boolean;
   interested: boolean;
+  phoneCall: boolean;
+  campusVisit: boolean;
   hasEmails: boolean;
   /** Non-empty `aiSummary` (executive summary generated). */
   hasAiSummary: boolean;

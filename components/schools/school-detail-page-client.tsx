@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import dynamic from "next/dynamic";
 import ReactMarkdown from "react-markdown";
-import { ArrowDown, ArrowUp, ExternalLink, Info, Mail, Minus, Phone, Star, MapPin, ThumbsUp } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, ExternalLink, Info, Minus, Star } from "lucide-react";
 
 import { normalizeExecutiveSummaryLinebreaks } from "@/lib/ai/executive-summary-markdown";
 import { athleticAidAvailableFromDivision, prospectChancesExplainer, prospectChancesFromAthleticTier } from "@/lib/derived";
@@ -639,18 +639,18 @@ export function SchoolDetailPageClient({ schoolId }: SchoolDetailPageClientProps
                   ) : null}
                 </div>
               </dd>
-              <dt className="text-sm text-muted-foreground sm:whitespace-nowrap">Distance from Scip</dt>
+              <dt className="text-sm text-muted-foreground sm:whitespace-nowrap">Scipio</dt>
               <dd className="min-w-0 text-sm">
                 {school.distanceFromHome != null ? `${Number(school.distanceFromHome).toFixed(1)} mi` : "—"}
               </dd>
               <dt className="flex items-center gap-1.5 text-sm text-muted-foreground sm:whitespace-nowrap">
-                <span>Prospect chances</span>
+                <span>Swim Odds</span>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
                       type="button"
                       className="inline-flex rounded-full text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      aria-label="How prospect chances are determined"
+                      aria-label="How Swim Odds are determined"
                     >
                       <Info className="size-4 shrink-0" aria-hidden />
                     </button>
@@ -677,36 +677,26 @@ export function SchoolDetailPageClient({ schoolId }: SchoolDetailPageClientProps
         </CardContent>
         <CardFooter className="flex flex-wrap gap-2">
           <Badge
-            className={cn(
-              "inline-flex items-center gap-1.5",
-              school.hasEmails
-                ? "border-amber-600/40 bg-amber-600/15 text-amber-900 hover:bg-amber-600/20 dark:text-amber-100"
-                : "",
-            )}
-            variant={school.hasEmails ? undefined : "secondary"}
+            variant={school.hasEmails ? "default" : "secondary"}
+            className="inline-flex items-center gap-1 rounded-full"
           >
-            <Mail className="size-3" aria-hidden />
+            {school.hasEmails ? <Check className="size-2.5 shrink-0" aria-hidden /> : null}
             Email
           </Badge>
           {(
             [
-              { key: "interested", label: "Tagged by School", icon: ThumbsUp, value: interested, setter: setInterested },
-              { key: "phoneCall", label: "Phone Call", icon: Phone, value: phoneCall, setter: setPhoneCall },
-              { key: "campusVisit", label: "Campus Visit", icon: MapPin, value: campusVisit, setter: setCampusVisit },
+              { key: "interested", label: "Swimcloud Interest", value: interested, setter: setInterested },
+              { key: "phoneCall", label: "Phone Call", value: phoneCall, setter: setPhoneCall },
+              { key: "campusVisit", label: "Campus Visit", value: campusVisit, setter: setCampusVisit },
             ] as const
-          ).map(({ key, label, icon: Icon, value, setter }) => (
+          ).map(({ key, label, value, setter }) => (
             <Badge
               key={key}
               role="switch"
               aria-checked={value}
               tabIndex={0}
-              className={cn(
-                "inline-flex cursor-pointer select-none items-center gap-1.5 transition-colors",
-                value
-                  ? "border-amber-600/40 bg-amber-600/15 text-amber-900 hover:bg-amber-600/20 dark:text-amber-100"
-                  : "",
-              )}
-              variant={value ? undefined : "secondary"}
+              className="inline-flex cursor-pointer select-none items-center gap-1 rounded-full transition-colors"
+              variant={value ? "default" : "secondary"}
               onClick={() => {
                 const next = !value;
                 setter(next);
@@ -721,7 +711,7 @@ export function SchoolDetailPageClient({ schoolId }: SchoolDetailPageClientProps
                 }
               }}
             >
-              <Icon className="size-3" aria-hidden />
+              {value ? <Check className="size-2.5 shrink-0" aria-hidden /> : null}
               {label}
             </Badge>
           ))}
@@ -820,13 +810,13 @@ export function SchoolDetailPageClient({ schoolId }: SchoolDetailPageClientProps
                 </div>
                 <div className="grid gap-1 sm:grid-cols-3">
                   <dt className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                    <span>Prospect Chances</span>
+                    <span>Swim Odds</span>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button
                           type="button"
                           className="inline-flex rounded-full text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                          aria-label="How prospect chances are determined"
+                          aria-label="How Swim Odds are determined"
                         >
                           <Info className="size-4 shrink-0" aria-hidden />
                         </button>

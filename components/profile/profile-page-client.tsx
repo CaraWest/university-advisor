@@ -24,6 +24,12 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface ProfileData {
   powerIndex?: number | null;
@@ -118,6 +124,8 @@ export function ProfilePageClient() {
   const [sizePreference, setSizePreference] = React.useState<string>(UNSET);
   const [geographyNotes, setGeographyNotes] = React.useState("");
   const [writingProfile, setWritingProfile] = React.useState<string | null>(null);
+  const [writingPromptOpen, setWritingPromptOpen] = React.useState(false);
+  const [studyAbroadPromptOpen, setStudyAbroadPromptOpen] = React.useState(false);
   const [studyAbroadProfile, setStudyAbroadProfile] =
     React.useState<string | null>(null);
 
@@ -371,18 +379,38 @@ export function ProfilePageClient() {
                   <p className="text-sm leading-relaxed text-muted-foreground">
                     {firstSentencePreview(writingProfile)}
                   </p>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/profile/interview">Redo interview</Link>
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setWritingPromptOpen(true)}
+                    >
+                      View style guide
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href="/profile/interview">Redo interview</Link>
+                    </Button>
+                  </div>
                 </>
               ) : (
                 <>
                   <p className="text-sm text-muted-foreground">
                     Short chat so coach emails sound like you.
                   </p>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/profile/interview">Start interview</Link>
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setWritingPromptOpen(true)}
+                    >
+                      View style guide
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href="/profile/interview">Start interview</Link>
+                    </Button>
+                  </div>
                 </>
               )}
             </CardContent>
@@ -405,22 +433,38 @@ export function ProfilePageClient() {
                   <p className="text-sm leading-relaxed text-muted-foreground">
                     {firstSentencePreview(studyAbroadProfile)}
                   </p>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/profile/study-abroad-interview">
-                      Redo interview
-                    </Link>
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setStudyAbroadPromptOpen(true)}
+                    >
+                      View profile
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href="/profile/study-abroad-interview">Redo interview</Link>
+                    </Button>
+                  </div>
                 </>
               ) : (
                 <>
                   <p className="text-sm text-muted-foreground">
                     Capture what you want from study abroad in college.
                   </p>
-                  <Button asChild variant="outline" size="sm">
-                    <Link href="/profile/study-abroad-interview">
-                      Start interview
-                    </Link>
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setStudyAbroadPromptOpen(true)}
+                    >
+                      View profile
+                    </Button>
+                    <Button asChild variant="outline" size="sm">
+                      <Link href="/profile/study-abroad-interview">Start interview</Link>
+                    </Button>
+                  </div>
                 </>
               )}
             </CardContent>
@@ -433,6 +477,65 @@ export function ProfilePageClient() {
           {saving ? "Saving..." : "Save Profile"}
         </Button>
       </div>
+
+      <Dialog open={writingPromptOpen} onOpenChange={setWritingPromptOpen}>
+        <DialogContent className="max-h-[90vh] max-w-2xl flex flex-col gap-0 overflow-y-auto p-0">
+          <div className="p-6 pb-0">
+            <DialogHeader>
+              <DialogTitle>Writing style guide</DialogTitle>
+            </DialogHeader>
+            <p className="pt-1 text-sm text-muted-foreground">
+              Text generated from your interview, used to draft coach emails in your voice.
+            </p>
+          </div>
+          <div className="p-6 pt-4">
+            {writingProfile?.trim() ? (
+              <div className="max-h-[60vh] overflow-y-auto rounded-md border bg-muted/50 p-4 text-sm leading-relaxed text-foreground">
+                <p className="whitespace-pre-wrap">{writingProfile.trim()}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No profile yet.{" "}
+                <Link href="/profile/interview" className="text-primary underline underline-offset-2">
+                  Start the interview
+                </Link>{" "}
+                to generate your style guide.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={studyAbroadPromptOpen} onOpenChange={setStudyAbroadPromptOpen}>
+        <DialogContent className="max-h-[90vh] max-w-2xl flex flex-col gap-0 overflow-y-auto p-0">
+          <div className="p-6 pb-0">
+            <DialogHeader>
+              <DialogTitle>Study abroad profile</DialogTitle>
+            </DialogHeader>
+            <p className="pt-1 text-sm text-muted-foreground">
+              Text generated from your interview, used to evaluate program fit in summaries.
+            </p>
+          </div>
+          <div className="p-6 pt-4">
+            {studyAbroadProfile?.trim() ? (
+              <div className="max-h-[60vh] overflow-y-auto rounded-md border bg-muted/50 p-4 text-sm leading-relaxed text-foreground">
+                <p className="whitespace-pre-wrap">{studyAbroadProfile.trim()}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No profile yet.{" "}
+                <Link
+                  href="/profile/study-abroad-interview"
+                  className="text-primary underline underline-offset-2"
+                >
+                  Start the interview
+                </Link>{" "}
+                to generate it.
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
