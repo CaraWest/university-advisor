@@ -24,6 +24,7 @@ model School {
 
   abigailFavorite    Boolean @default(false)
   interested         Boolean @default(false)
+  email              Boolean @default(false)
   phoneCall          Boolean @default(false)
   campusVisit        Boolean @default(false)
   enrichmentComplete Boolean @default(false)

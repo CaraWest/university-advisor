@@ -46,6 +46,7 @@ export const schoolPatchSchema = z
     notes: z.string().nullable().optional(),
     abigailFavorite: z.boolean().optional(),
     interested: z.boolean().optional(),
+    email: z.boolean().optional(),
     phoneCall: z.boolean().optional(),
     campusVisit: z.boolean().optional(),
     financialModel: financialModelPatchSchema.optional(),

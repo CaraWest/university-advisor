@@ -137,6 +137,7 @@ export function SchoolDetailPageClient({ schoolId }: SchoolDetailPageClientProps
   const [status, setStatus] = React.useState("");
   const [abigailFavorite, setAbigailFavorite] = React.useState(false);
   const [interested, setInterested] = React.useState(false);
+  const [email, setEmail] = React.useState(false);
   const [phoneCall, setPhoneCall] = React.useState(false);
   const [campusVisit, setCampusVisit] = React.useState(false);
 
@@ -185,6 +186,7 @@ export function SchoolDetailPageClient({ schoolId }: SchoolDetailPageClientProps
     setStatus(data.status);
     setAbigailFavorite(data.abigailFavorite);
     setInterested(data.interested);
+    setEmail(data.email);
     setPhoneCall(data.phoneCall);
     setCampusVisit(data.campusVisit);
     setNotes(data.notes ?? "");
@@ -676,16 +678,10 @@ export function SchoolDetailPageClient({ schoolId }: SchoolDetailPageClientProps
           </div>
         </CardContent>
         <CardFooter className="flex flex-wrap gap-2">
-          <Badge
-            variant={school.hasEmails ? "default" : "secondary"}
-            className="inline-flex items-center gap-1 rounded-full"
-          >
-            {school.hasEmails ? <Check className="size-2.5 shrink-0" aria-hidden /> : null}
-            Email
-          </Badge>
           {(
             [
               { key: "interested", label: "Swimcloud Interest", value: interested, setter: setInterested },
+              { key: "email", label: "Email", value: email, setter: setEmail },
               { key: "phoneCall", label: "Phone Call", value: phoneCall, setter: setPhoneCall },
               { key: "campusVisit", label: "Campus Visit", value: campusVisit, setter: setCampusVisit },
             ] as const

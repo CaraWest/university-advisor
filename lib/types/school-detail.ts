@@ -23,6 +23,7 @@ export type SchoolDetailJson = {
   rejectionReason: string | null;
   abigailFavorite: boolean;
   interested: boolean;
+  email: boolean;
   phoneCall: boolean;
   campusVisit: boolean;
   enrichmentComplete: boolean;
